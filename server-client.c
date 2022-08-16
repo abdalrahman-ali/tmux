@@ -2218,7 +2218,8 @@ server_client_check_pane_buffer(struct window_pane *wp)
 		}
 		wpo = control_pane_offset(c, wp, &flag);
 		if (wpo == NULL) {
-			off = 0;
+			if (!flag)
+				off = 0;
 			continue;
 		}
 		if (!flag)
@@ -2788,8 +2789,11 @@ server_client_command_done(struct cmdq_item *item, __unused void *data)
 
 	if (~c->flags & CLIENT_ATTACHED)
 		c->flags |= CLIENT_EXIT;
-	else if (~c->flags & CLIENT_EXIT)
+	else if (~c->flags & CLIENT_EXIT) {
+		if (c->flags & CLIENT_CONTROL)
+			control_ready(c);
 		tty_send_requests(&c->tty);
+	}
 	return (CMD_RETURN_NORMAL);
 }
 

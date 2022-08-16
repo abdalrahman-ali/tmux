@@ -515,6 +515,7 @@ enum tty_code_code {
 	TTYC_KUP6,
 	TTYC_KUP7,
 	TTYC_MS,
+	TTYC_NOBR,
 	TTYC_OL,
 	TTYC_OP,
 	TTYC_RECT,
@@ -1433,37 +1434,44 @@ struct tty_ctx {
 	void			*ptr2;
 
 	/*
+	 * Whether this command should be sent even when the pane is not
+	 * visible (used for a passthrough sequence when allow-passthrough is
+	 * "all").
+	 */
+	int			 allow_invisible_panes;
+
+	/*
 	 * Cursor and region position before the screen was updated - this is
 	 * where the command should be applied; the values in the screen have
 	 * already been updated.
 	 */
-	u_int		 ocx;
-	u_int		 ocy;
+	u_int			 ocx;
+	u_int			 ocy;
 
-	u_int		 orupper;
-	u_int		 orlower;
+	u_int			 orupper;
+	u_int			 orlower;
 
 	/* Target region (usually pane) offset and size. */
-	u_int		 xoff;
-	u_int		 yoff;
-	u_int		 rxoff;
-	u_int		 ryoff;
-	u_int		 sx;
-	u_int		 sy;
+	u_int			 xoff;
+	u_int			 yoff;
+	u_int			 rxoff;
+	u_int			 ryoff;
+	u_int			 sx;
+	u_int			 sy;
 
 	/* The background colour used for clearing (erasing). */
-	u_int		 bg;
+	u_int			 bg;
 
 	/* The default colours and palette. */
-	struct grid_cell defaults;
-	struct colour_palette *palette;
+	struct grid_cell	 defaults;
+	struct colour_palette	*palette;
 
 	/* Containing region (usually window) offset and size. */
-	int		 bigger;
-	u_int		 wox;
-	u_int		 woy;
-	u_int		 wsx;
-	u_int		 wsy;
+	int			 bigger;
+	u_int			 wox;
+	u_int			 woy;
+	u_int			 wsx;
+	u_int			 wsy;
 };
 
 /* Saved message entry. */
@@ -2127,6 +2135,8 @@ void		 format_defaults_paste_buffer(struct format_tree *,
 		     struct paste_buffer *);
 void		 format_lost_client(struct client *);
 char		*format_grid_word(struct grid *, u_int, u_int);
+char		*format_grid_hyperlink(struct grid *, u_int, u_int,
+		     struct screen *);
 char		*format_grid_line(struct grid *, u_int);
 
 /* format-draw.c */
@@ -2145,6 +2155,7 @@ void	notify_winlink(const char *, struct winlink *);
 void	notify_session_window(const char *, struct session *, struct window *);
 void	notify_window(const char *, struct window *);
 void	notify_pane(const char *, struct window_pane *);
+void	notify_paste_buffer(const char *);
 
 /* options.c */
 struct options	*options_create(struct options *);
@@ -2774,7 +2785,7 @@ void	 grid_clear_lines(struct grid *, u_int, u_int, u_int);
 void	 grid_move_lines(struct grid *, u_int, u_int, u_int, u_int);
 void	 grid_move_cells(struct grid *, u_int, u_int, u_int, u_int, u_int);
 char	*grid_string_cells(struct grid *, u_int, u_int, u_int,
-	     struct grid_cell **, int, int, int);
+	     struct grid_cell **, int, int, int, struct screen *);
 void	 grid_duplicate_lines(struct grid *, u_int, struct grid *, u_int,
 	     u_int);
 void	 grid_reflow(struct grid *, u_int);
@@ -2889,7 +2900,8 @@ void	 screen_write_collect_add(struct screen_write_ctx *,
 void	 screen_write_cell(struct screen_write_ctx *, const struct grid_cell *);
 void	 screen_write_setselection(struct screen_write_ctx *, const char *,
 	     u_char *, u_int);
-void	 screen_write_rawstring(struct screen_write_ctx *, u_char *, u_int);
+void	 screen_write_rawstring(struct screen_write_ctx *, u_char *, u_int,
+	     int);
 void	 screen_write_alternateon(struct screen_write_ctx *,
 	     struct grid_cell *, int);
 void	 screen_write_alternateoff(struct screen_write_ctx *,
@@ -3134,6 +3146,7 @@ char	*parse_window_name(const char *);
 /* control.c */
 void	control_discard(struct client *);
 void	control_start(struct client *);
+void	control_ready(struct client *);
 void	control_stop(struct client *);
 void	control_set_pane_on(struct client *, struct window_pane *);
 void	control_set_pane_off(struct client *, struct window_pane *);
@@ -3164,6 +3177,7 @@ void	control_notify_session_renamed(struct session *);
 void	control_notify_session_created(struct session *);
 void	control_notify_session_closed(struct session *);
 void	control_notify_session_window_changed(struct session *);
+void	control_notify_paste_buffer_changed(const char *);
 
 /* session.c */
 extern struct sessions sessions;
@@ -3315,7 +3329,7 @@ uid_t			 server_acl_get_uid(struct server_acl_user *);
 u_int	 		 hyperlinks_put(struct hyperlinks *, const char *,
 			     const char *);
 int			 hyperlinks_get(struct hyperlinks *, u_int,
-			     const char **, const char **);
+			     const char **, const char **, const char **);
 struct hyperlinks	*hyperlinks_init(void);
 void			 hyperlinks_reset(struct hyperlinks *);
 void			 hyperlinks_free(struct hyperlinks *);

@@ -217,8 +217,6 @@ that is set does not contain
 .Qq UTF-8
 or
 .Qq UTF8 .
-This is equivalent to
-.Fl T Ar UTF-8 .
 .It Fl T Ar features
 Set terminal features for the client.
 This is a comma-separated list of features.
@@ -2115,9 +2113,11 @@ is not given, "detach-client -t '%%'" is used.
 specifies the initial sort field: one of
 .Ql name ,
 .Ql size ,
-.Ql creation ,
+.Ql creation
+(time),
 or
-.Ql activity .
+.Ql activity
+(time).
 .Fl r
 reverses the sort order.
 .Fl f
@@ -2199,7 +2199,8 @@ specifies the initial sort field: one of
 .Ql index ,
 .Ql name ,
 or
-.Ql time .
+.Ql time
+(activity).
 .Fl r
 reverses the sort order.
 .Fl f
@@ -4463,11 +4464,17 @@ Available pane options are:
 .Pp
 .Bl -tag -width Ds -compact
 .It Xo Ic allow-passthrough
-.Op Ic on | off
+.Op Ic on | off | all
 .Xc
 Allow programs in the pane to bypass
 .Nm
 using a terminal escape sequence (\eePtmux;...\ee\e\e).
+If set to
+.Ic on ,
+passthrough sequences will be allowed only if the pane is visible.
+If set to
+.Ic all ,
+they will be allowed even if the pane is invisible.
 .Pp
 .It Xo Ic allow-rename
 .Op Ic on | off
@@ -5163,6 +5170,7 @@ The following variables are available, where appropriate:
 .It Li "mouse_all_flag" Ta "" Ta "Pane mouse all flag"
 .It Li "mouse_any_flag" Ta "" Ta "Pane mouse any flag"
 .It Li "mouse_button_flag" Ta "" Ta "Pane mouse button flag"
+.It Li "mouse_hyperlink" Ta "" Ta "Hyperlink under mouse, if any"
 .It Li "mouse_line" Ta "" Ta "Line under mouse, if any"
 .It Li "mouse_sgr_flag" Ta "" Ta "Pane mouse SGR flag"
 .It Li "mouse_standard_flag" Ta "" Ta "Pane mouse standard flag"
@@ -6109,7 +6117,8 @@ is not given, "paste-buffer -b '%%'" is used.
 .Pp
 .Fl O
 specifies the initial sort field: one of
-.Ql time ,
+.Ql time
+(creation),
 .Ql name
 or
 .Ql size .
@@ -6424,6 +6433,10 @@ These are set automatically if the
 capability is present.
 .It Em \&Hls
 Set or clear a hyperlink annotation.
+.It Em \&Nobr
+Tell
+.Nm
+that the terminal does not use bright colors for bold display.
 .It Em \&Rect
 Tell
 .Nm
@@ -6586,6 +6599,10 @@ escapes non-printable characters and backslash as octal \\xxx.
 The pane with ID
 .Ar pane-id
 has changed mode.
+.It Ic %paste-buffer-changed Ar name
+Paste buffer
+.Ar name
+has been changed.
 .It Ic %pause Ar pane-id
 The pane has been paused (if the
 .Ar pause-after

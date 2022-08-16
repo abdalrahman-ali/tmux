@@ -54,6 +54,9 @@
 	" '#{?mouse_word,Copy #[underscore]#{=/9/...:mouse_word},}' 'c' {copy-mode -q; set-buffer -- \"#{q:mouse_word}\"}" \
 	" '#{?mouse_line,Copy Line,}' 'l' {copy-mode -q; set-buffer -- \"#{q:mouse_line}\"}" \
 	" ''" \
+	" '#{?mouse_hyperlink,Type #[underscore]#{=/9/...:mouse_hyperlink},}' 'C-h' {copy-mode -q; send-keys -l -- \"#{q:mouse_hyperlink}\"}" \
+	" '#{?mouse_hyperlink,Copy #[underscore]#{=/9/...:mouse_hyperlink},}' 'h' {copy-mode -q; set-buffer -- \"#{q:mouse_hyperlink}\"}" \
+	" ''" \
 	" 'Horizontal Split' 'h' {split-window -h}" \
 	" 'Vertical Split' 'v' {split-window -v}" \
 	" ''" \
@@ -341,7 +344,7 @@ key_bindings_init_done(__unused struct cmdq_item *item, __unused void *data)
 void
 key_bindings_init(void)
 {
-	static const char *defaults[] = {
+	static const char *const defaults[] = {
 		/* Prefix keys. */
 		"bind -N 'Send the prefix key' C-b { send-prefix }",
 		"bind -N 'Rotate through the panes' C-o { rotate-window }",
@@ -613,6 +616,8 @@ key_bindings_init(void)
 		"bind -Tcopy-mode-vi '{' { send -X previous-paragraph }",
 		"bind -Tcopy-mode-vi '}' { send -X next-paragraph }",
 		"bind -Tcopy-mode-vi % { send -X next-matching-bracket }",
+		"bind -Tcopy-mode-vi Home { send -X start-of-line }",
+		"bind -Tcopy-mode-vi End { send -X end-of-line }",
 		"bind -Tcopy-mode-vi MouseDown1Pane { select-pane }",
 		"bind -Tcopy-mode-vi MouseDrag1Pane { select-pane; send -X begin-selection }",
 		"bind -Tcopy-mode-vi MouseDragEnd1Pane { send -X copy-pipe-and-cancel }",
