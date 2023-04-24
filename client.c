@@ -284,6 +284,12 @@ client_main(struct event_base *base, int argc, char **argv, uint64_t flags,
 	log_debug("flags are %#llx", (unsigned long long)client_flags);
 
 	/* Initialize the client socket and start the server. */
+#ifdef HAVE_SYSTEMD
+	if (systemd_activated()) {
+		/* socket-based activation, do not even try to be a client. */
+		fd = server_start(client_proc, flags, base, 0, NULL);
+	} else
+#endif
 	fd = client_connect(base, socket_path, client_flags);
 	if (fd == -1) {
 		if (errno == ECONNREFUSED) {
@@ -693,6 +699,9 @@ client_dispatch_wait(struct imsg *imsg)
 		file_read_open(&client_files, client_peer, imsg, 1,
 		    !(client_flags & CLIENT_CONTROL), client_file_check_cb,
 		    NULL);
+		break;
+	case MSG_READ_CANCEL:
+		file_read_cancel(&client_files, imsg);
 		break;
 	case MSG_WRITE_OPEN:
 		file_write_open(&client_files, client_peer, imsg, 1,
