@@ -350,6 +350,10 @@ else
 		AC_MSG_ERROR("curses not found")
 	fi
 fi
+AC_CHECK_FUNCS([ \
+	tiparm \
+	tiparm_s \
+])
 
 # Look for utempter.
 AC_ARG_ENABLE(
@@ -935,6 +939,19 @@ AM_CONDITIONAL(IS_SUNOS, test "x$PLATFORM" = xsunos)
 AM_CONDITIONAL(IS_HPUX, test "x$PLATFORM" = xhpux)
 AM_CONDITIONAL(IS_HAIKU, test "x$PLATFORM" = xhaiku)
 AM_CONDITIONAL(IS_UNKNOWN, test "x$PLATFORM" = xunknown)
+
+# Set the default lock command
+DEFAULT_LOCK_CMD="lock -np"
+AC_MSG_CHECKING(lock-command)
+if test "x$PLATFORM" = xlinux; then
+	AC_CHECK_PROG(found_vlock, vlock, yes, no)
+	if test "x$found_vlock" = xyes; then
+		DEFAULT_LOCK_CMD="vlock"
+	fi
+fi
+AC_MSG_RESULT($DEFAULT_LOCK_CMD)
+AC_SUBST(DEFAULT_LOCK_CMD)
+
 
 # Save our CFLAGS/CPPFLAGS/LDFLAGS for the Makefile and restore the old user
 # variables.
