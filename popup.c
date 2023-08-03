@@ -636,7 +636,7 @@ int
 popup_display(int flags, enum box_lines lines, struct cmdq_item *item, u_int px,
     u_int py, u_int sx, u_int sy, struct environ *env, const char *shellcmd,
     int argc, char **argv, const char *cwd, const char *title, struct client *c,
-    struct session *s, const char* style, const char* border_style,
+    struct session *s, const char *style, const char *border_style,
     popup_close_cb cb, void *arg)
 {
 	struct popup_data	*pd;
@@ -787,6 +787,8 @@ popup_editor(struct client *c, const char *buf, size_t len,
 	if (fd == -1)
 		return (-1);
 	f = fdopen(fd, "w");
+	if (f == NULL)
+		return (-1);
 	if (fwrite(buf, len, 1, f) != 1) {
 		fclose(f);
 		return (-1);

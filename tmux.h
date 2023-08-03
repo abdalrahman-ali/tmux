@@ -675,6 +675,7 @@ struct colour_palette {
 #define GRID_LINE_WRAPPED 0x1
 #define GRID_LINE_EXTENDED 0x2
 #define GRID_LINE_DEAD 0x4
+#define GRID_LINE_START_PROMPT 0x8
 
 /* Grid string flags. */
 #define GRID_STRING_WITH_SEQUENCES 0x1
@@ -1041,7 +1042,7 @@ struct window_pane {
 #define PANE_REDRAW 0x1
 #define PANE_DROP 0x2
 #define PANE_FOCUSED 0x4
-/* 0x8 unused */
+#define PANE_VISITED 0x8
 /* 0x10 unused */
 /* 0x20 unused */
 #define PANE_INPUTOFF 0x40
@@ -1096,7 +1097,8 @@ struct window_pane {
 	int		 border_gc_set;
 	struct grid_cell border_gc;
 
-	TAILQ_ENTRY(window_pane) entry;
+	TAILQ_ENTRY(window_pane) entry;  /* link in list of all panes */
+	TAILQ_ENTRY(window_pane) sentry; /* link in list of last visited */
 	RB_ENTRY(window_pane) tree_entry;
 };
 TAILQ_HEAD(window_panes, window_pane);
@@ -1117,7 +1119,7 @@ struct window {
 	struct timeval		 activity_time;
 
 	struct window_pane	*active;
-	struct window_pane	*last;
+	struct window_panes 	 last_panes;
 	struct window_panes	 panes;
 
 	int			 lastlayout;
@@ -1170,6 +1172,7 @@ struct winlink {
 #define WINLINK_ACTIVITY 0x2
 #define WINLINK_SILENCE 0x4
 #define WINLINK_ALERTFLAGS (WINLINK_BELL|WINLINK_ACTIVITY|WINLINK_SILENCE)
+#define WINLINK_VISITED 0x8
 
 	RB_ENTRY(winlink) entry;
 	TAILQ_ENTRY(winlink) wentry;
@@ -2895,8 +2898,8 @@ void	 screen_write_hline(struct screen_write_ctx *, u_int, int, int);
 void	 screen_write_vline(struct screen_write_ctx *, u_int, int, int);
 void	 screen_write_menu(struct screen_write_ctx *, struct menu *, int,
 	     const struct grid_cell *);
-void	 screen_write_box(struct screen_write_ctx *, u_int, u_int, int,
-	     const struct grid_cell *, const char *);
+void	 screen_write_box(struct screen_write_ctx *, u_int, u_int,
+             enum box_lines, const struct grid_cell *, const char *);
 void	 screen_write_preview(struct screen_write_ctx *, struct screen *, u_int,
 	     u_int);
 void	 screen_write_backspace(struct screen_write_ctx *);
@@ -3045,6 +3048,10 @@ struct window_pane *window_pane_find_up(struct window_pane *);
 struct window_pane *window_pane_find_down(struct window_pane *);
 struct window_pane *window_pane_find_left(struct window_pane *);
 struct window_pane *window_pane_find_right(struct window_pane *);
+void		 window_pane_stack_push(struct window_panes *,
+		     struct window_pane *);
+void		 window_pane_stack_remove(struct window_panes *,
+		     struct window_pane *);
 void		 window_set_name(struct window *, const char *);
 void		 window_add_ref(struct window *, const char *);
 void		 window_remove_ref(struct window *, const char *);
@@ -3322,11 +3329,11 @@ int		 menu_key_cb(struct client *, void *, struct key_event *);
 #define POPUP_INTERNAL 0x4
 typedef void (*popup_close_cb)(int, void *);
 typedef void (*popup_finish_edit_cb)(char *, size_t, void *);
-int		 popup_display(int, int, struct cmdq_item *, u_int, u_int,
-		    u_int, u_int, struct environ *, const char *, int, char **,
-		    const char *, const char *, struct client *,
-		    struct session *, const char *, const char *,
-		    popup_close_cb, void *);
+int		 popup_display(int, enum box_lines, struct cmdq_item *, u_int,
+                    u_int, u_int, u_int, struct environ *, const char *, int,
+                    char **, const char *, const char *, struct client *,
+                    struct session *, const char *, const char *,
+                    popup_close_cb, void *);
 int		 popup_editor(struct client *, const char *, size_t,
 		    popup_finish_edit_cb, void *);
 

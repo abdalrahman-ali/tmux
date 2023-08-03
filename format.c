@@ -1902,7 +1902,7 @@ static void *
 format_cb_pane_last(struct format_tree *ft)
 {
 	if (ft->wp != NULL) {
-		if (ft->wp == ft->wp->window->last)
+		if (ft->wp == TAILQ_FIRST(&ft->wp->window->last_panes))
 			return (xstrdup("1"));
 		return (xstrdup("0"));
 	}
@@ -2075,6 +2075,18 @@ format_cb_scroll_region_upper(struct format_tree *ft)
 	if (ft->wp != NULL)
 		return (format_printf("%u", ft->wp->base.rupper));
 	return (NULL);
+}
+
+/* Callback for server_sessions. */
+static void *
+format_cb_server_sessions(__unused struct format_tree *ft)
+{
+	struct session	*s;
+	u_int		 n = 0;
+
+	RB_FOREACH(s, sessions, &sessions)
+		n++;
+	return (format_printf("%u", n));
 }
 
 /* Callback for session_attached. */
@@ -2980,6 +2992,9 @@ static const struct format_table_entry format_table[] = {
 	{ "scroll_region_upper", FORMAT_TABLE_STRING,
 	  format_cb_scroll_region_upper
 	},
+	{ "server_sessions", FORMAT_TABLE_STRING,
+	  format_cb_server_sessions
+	},
 	{ "session_activity", FORMAT_TABLE_TIME,
 	  format_cb_session_activity
 	},
@@ -3649,7 +3664,9 @@ format_skip(const char *s, const char *end)
 	for (; *s != '\0'; s++) {
 		if (*s == '#' && s[1] == '{')
 			brackets++;
-		if (*s == '#' && strchr(",#{}:", s[1]) != NULL) {
+		if (*s == '#' &&
+		    s[1] != '\0' &&
+		    strchr(",#{}:", s[1]) != NULL) {
 			s++;
 			continue;
 		}
@@ -3798,7 +3815,7 @@ format_build_modifiers(struct format_expand_state *es, const char **s,
 		argc = 0;
 
 		/* Single argument with no wrapper character. */
-		if (!ispunct(cp[1]) || cp[1] == '-') {
+		if (!ispunct((u_char)cp[1]) || cp[1] == '-') {
 			end = format_skip(cp + 1, ":;");
 			if (end == NULL)
 				break;
