@@ -44,7 +44,7 @@ fi
 # Set up the compiler in two different ways and say yes we may want to install.
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_PROG_CC_C99
+m4_version_prereq(2.70, [AC_PROG_CC], [AC_PROG_CC_C99])
 AC_PROG_CPP
 AC_PROG_EGREP
 AC_PROG_INSTALL
@@ -448,6 +448,16 @@ if test "x$enable_cgroups" = xyes; then
 		AC_MSG_ERROR("cgroups requires systemd to be enabled")
 	fi
 fi
+
+# Enable sixel support.
+AC_ARG_ENABLE(
+	sixel,
+	AS_HELP_STRING(--enable-sixel, enable sixel images)
+)
+if test "x$enable_sixel" = xyes; then
+	AC_DEFINE(ENABLE_SIXEL)
+fi
+AM_CONDITIONAL(ENABLE_SIXEL, [test "x$enable_sixel" = xyes])
 
 # Check for b64_ntop. If we have b64_ntop, we assume b64_pton as well.
 AC_MSG_CHECKING(for b64_ntop)

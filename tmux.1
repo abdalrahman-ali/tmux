@@ -1549,6 +1549,7 @@ show debugging information about jobs and terminals.
 .Tg source
 .It Xo Ic source-file
 .Op Fl Fnqv
+.Op Fl t Ar target-pane
 .Ar path ...
 .Xc
 .D1 Pq alias: Ic source
@@ -1785,29 +1786,35 @@ Exit copy mode.
 .Xc
 Clear the current selection.
 .It Xo
-.Ic copy-end-of-line [<prefix>]
+.Ic copy-end-of-line
+.Op Ar prefix
 .Xc
 Copy from the cursor position to the end of the line.
 .Ar prefix
 is used to name the new paste buffer.
 .It Xo
-.Ic copy-end-of-line-and-cancel [<prefix>]
+.Ic copy-end-of-line-and-cancel
+.Op Ar prefix
 .Xc
 Copy from the cursor position and exit copy mode.
 .It Xo
-.Ic copy-line [<prefix>]
+.Ic copy-line
+.Op Ar prefix
 .Xc
 Copy the entire line.
 .It Xo
-.Ic copy-line-and-cancel [<prefix>]
+.Ic copy-line-and-cancel
+.Op Ar prefix
 .Xc
 Copy the entire line and exit copy mode.
 .It Xo
-.Ic copy-selection [<prefix>]
+.Ic copy-selection
+.Op Ar prefix
 .Xc
 Copies the current selection.
 .It Xo
-.Ic copy-selection-and-cancel [<prefix>]
+.Ic copy-selection-and-cancel
+.Op Ar prefix
 (vi: Enter)
 (emacs: M-w)
 .Xc
@@ -1843,7 +1850,8 @@ Move the cursor up.
 .Xc
 Move the cursor to the end of the line.
 .It Xo
-.Ic goto-line <line>
+.Ic goto-line
+.Ar line
 (vi: :)
 (emacs: g)
 .Xc
@@ -1867,13 +1875,15 @@ Scroll to the top of the history.
 .Xc
 Repeat the last jump.
 .It Xo
-.Ic jump-backward <to>
+.Ic jump-backward
+.Ar to
 (vi: F)
 (emacs: F)
 .Xc
 Jump backwards to the specified text.
 .It Xo
-.Ic jump-forward <to>
+.Ic jump-forward
+.Ar to
 (vi: f)
 (emacs: f)
 .Xc
@@ -1904,6 +1914,7 @@ Move to the next matching bracket.
 Move to the next paragraph.
 .It Xo
 .Ic next-prompt
+.Op Fl o
 .Xc
 Move to the next prompt.
 .It Xo
@@ -1936,6 +1947,7 @@ Move to the previous matching bracket.
 Move to the previous paragraph.
 .It Xo
 .Ic previous-prompt
+.Op Fl o
 .Xc
 Move to the previous prompt.
 .It Xo
@@ -1963,12 +1975,14 @@ Refresh the content from the pane.
 .Xc
 Repeat the last search.
 .It Xo
-.Ic search-backward <for>
+.Ic search-backward
+.Ar text
 (vi: ?)
 .Xc
 Search backwards for the specified text.
 .It Xo
-.Ic search-forward <for>
+.Ic search-forward
+.Ar text
 (vi: /)
 .Xc
 Search forward for the specified text.
@@ -1993,18 +2007,6 @@ Move the cursor to the start of the line.
 (emacs: M-R)
 .Xc
 Move to the top line.
-.It Xo
-.Ic next-prompt
-(vi: C-n)
-(emacs: C-n)
-.Xc
-Move to the next prompt.
-.It Xo
-.Ic previous-prompt
-(vi: C-p)
-(emacs: C-p)
-.Xc
-Move to the previous prompt.
 .El
 .Pp
 The search commands come in several varieties:
@@ -2036,6 +2038,9 @@ move between shell prompts, but require the shell to emit an escape sequence
 .Nm
 where the prompts are located; if the shell does not do this, these commands
 will do nothing.
+The
+.Fl o
+flag jumps to the beginning of the command output instead of the shell prompt.
 .Pp
 Copy commands may take an optional buffer prefix argument which is used
 to generate the buffer name (the default is
@@ -4026,16 +4031,25 @@ The default is 80x24.
 If enabled and the session is no longer attached to any clients, it is
 destroyed.
 .It Xo Ic detach-on-destroy
-.Op Ic off | on | no-detached
+.Op Ic off | on | no-detached | previous | next
 .Xc
-If on (the default), the client is detached when the session it is attached to
+If
+.Ic on
+(the default), the client is detached when the session it is attached to
 is destroyed.
-If off, the client is switched to the most recently active of the remaining
+If
+.Ic off ,
+the client is switched to the most recently active of the remaining
 sessions.
 If
 .Ic no-detached ,
 the client is detached only if there are no detached sessions; if detached
 sessions exist, the client is switched to the most recently active.
+If
+.Ic previous
+or
+.Ic next ,
+the client is switched to the previous or next session in alphabetical order.
 .It Ic display-panes-active-colour Ar colour
 Set the colour used by the
 .Ic display-panes
@@ -4076,6 +4090,33 @@ The default is to run
 .Xr lock 1
 with
 .Fl np .
+.It Ic menu-style Ar style
+Set the menu style.
+See the
+.Sx STYLES
+section on how to specify
+.Ar style .
+Attributes are ignored.
+.It Ic menu-selected-style Ar style
+Set the selected menu item style.
+See the
+.Sx STYLES
+section on how to specify
+.Ar style .
+Attributes are ignored.
+.It Ic menu-border-style Ar style
+Set the menu border style.
+See the
+.Sx STYLES
+section on how to specify
+.Ar style .
+Attributes are ignored.
+.It Ic menu-border-lines Ar type
+Set the type of characters used for drawing menu borders.
+See
+.Ic popup-border-lines
+for possible values for
+.Ar border-lines .
 .It Ic message-command-style Ar style
 Set status line message command style.
 This is used for the command prompt with
@@ -4543,20 +4584,18 @@ Attributes are ignored.
 .Pp
 .It Ic popup-style Ar style
 Set the popup style.
-For how to specify
-.Ar style ,
-see the
+See the
 .Sx STYLES
-section.
+section on how to specify
+.Ar style .
 Attributes are ignored.
 .Pp
 .It Ic popup-border-style Ar style
 Set the popup border style.
-For how to specify
-.Ar style ,
-see the
+See the
 .Sx STYLES
-section.
+section on how to specify
+.Ar style .
 Attributes are ignored.
 .Pp
 .It Ic popup-border-lines Ar type
@@ -5405,6 +5444,8 @@ The following variables are available, where appropriate:
 .It Li "mouse_line" Ta "" Ta "Line under mouse, if any"
 .It Li "mouse_sgr_flag" Ta "" Ta "Pane mouse SGR flag"
 .It Li "mouse_standard_flag" Ta "" Ta "Pane mouse standard flag"
+.It Li "mouse_status_line" Ta "" Ta "Status line on which mouse event took place"
+.It Li "mouse_status_range" Ta "" Ta "Range type or argument of mouse event on status line"
 .It Li "mouse_utf8_flag" Ta "" Ta "Pane mouse UTF-8 flag"
 .It Li "mouse_word" Ta "" Ta "Word under mouse, if any"
 .It Li "mouse_x" Ta "" Ta "Mouse X position, if any"
@@ -5643,26 +5684,56 @@ Only one default may be pushed (each
 replaces the previous saved default).
 .It Xo Ic range=left ,
 .Ic range=right ,
+.Ic range=session|X ,
 .Ic range=window|X ,
+.Ic range=pane|X ,
+.Ic range=user|X ,
 .Ic norange
 .Xc
-Mark a range in the
+Mark a range for mouse events in the
 .Ic status-format
 option.
+When a mouse event occurs in the
 .Ic range=left
-and
+or
 .Ic range=right
-are the text used for the
+range, the
 .Ql StatusLeft
 and
 .Ql StatusRight
-mouse keys.
+key bindings are triggered.
+.Pp
+.Ic range=session|X ,
 .Ic range=window|X
-is the range for a window passed to the
+and
+.Ic range=pane|X
+are ranges for a session, window or pane.
+These trigger the
 .Ql Status
-mouse key, where
+mouse key with the target session, window or pane given by the
 .Ql X
-is a window index.
+argument.
+.Ql X
+is a session ID, window index in the current session or a pane ID.
+For these, the
+.Ic mouse_status_range
+format variable will be set to
+.Ql session ,
+.Ql window
+or
+.Ql pane .
+.Pp
+.Ic range=user|X
+is a user-defined range; it triggers the
+.Ql Status
+mouse key.
+The argument
+.Ql X
+will be available in the
+.Ic mouse_status_range
+format variable.
+.Ql X
+must be at most 15 bytes in length.
 .El
 .Pp
 Examples are:
@@ -6031,9 +6102,13 @@ the default is
 .Tg menu
 .It Xo Ic display-menu
 .Op Fl O
+.Op Fl b Ar border-lines
 .Op Fl c Ar target-client
+.Op Fl C Ar starting-choice
+.Op Fl H Ar selected-style
+.Op Fl s Ar style
+.Op Fl S Ar border-style
 .Op Fl t Ar target-pane
-.Op Fl S Ar starting-choice
 .Op Fl T Ar title
 .Op Fl x Ar position
 .Op Fl y Ar position
@@ -6060,10 +6135,28 @@ may not be chosen.
 The name may be empty for a separator line, in which case both the key and
 command should be omitted.
 .Pp
+.Fl b
+sets the type of characters used for drawing menu borders.
+See
+.Ic popup-border-lines
+for possible values for
+.Ar border-lines .
+.Pp
+.Fl H
+sets the style for the selected menu item (see
+.Sx STYLES ) .
+.Pp
+.Fl s
+sets the style for the menu and
+.Fl S
+sets the style for the menu border (see
+.Sx STYLES ) .
+.Pp
 .Fl T
 is a format for the menu title (see
 .Sx FORMATS ) .
-.Fl S
+.Pp
+.Fl C
 sets the menu item selected by default, if the menu is not bound to a mouse key
 binding.
 .Pp
@@ -6178,8 +6271,8 @@ forwards any input read from stdin to the empty pane given by
 .Op Fl d Ar start-directory
 .Op Fl e Ar environment
 .Op Fl h Ar height
-.Op Fl s Ar style
-.Op Fl S Ar border-style
+.Op Fl s Ar border-style
+.Op Fl S Ar style
 .Op Fl t Ar target-pane
 .Op Fl T Ar title
 .Op Fl w Ar width
@@ -6222,7 +6315,7 @@ If omitted, half of the terminal size is used.
 does not surround the popup by a border.
 .Pp
 .Fl b
-sets the type of border line for the popup.
+sets the type of characters used for drawing popup borders.
 When
 .Fl B
 is specified, the
@@ -6236,12 +6329,8 @@ for possible values for
 .Fl s
 sets the style for the popup and
 .Fl S
-sets the style for the popup border.
-For how to specify
-.Ar style ,
-see the
-.Sx STYLES
-section.
+sets the style for the popup border (see
+.Sx STYLES ) .
 .Pp
 .Fl e
 takes the form
@@ -6551,6 +6640,7 @@ option.
 .Tg run
 .It Xo Ic run-shell
 .Op Fl bC
+.Op Fl c Ar start-directory
 .Op Fl d Ar delay
 .Op Fl t Ar target-pane
 .Op Ar shell-command
@@ -6577,6 +6667,10 @@ the command is run in the background.
 waits for
 .Ar delay
 seconds before starting the command.
+If
+.Fl c
+is given, the current working directory is set to
+.Ar start-directory .
 If
 .Fl C
 is not given, any output to stdout is displayed in view mode (in the pane
@@ -6700,9 +6794,15 @@ Set a styled underscore.
 The single parameter is one of: 0 for no underscore, 1 for normal
 underscore, 2 for double underscore, 3 for curly underscore, 4 for dotted
 underscore and 5 for dashed underscore.
-.It Em \&Setulc , \&ol
+.It Em \&Setulc , \&Setulc1, \&ol
 Set the underscore colour or reset to the default.
-The argument is (red * 65536) + (green * 256) + blue where each is between 0
+.Em Setulc
+is for RGB colours and
+.Em Setulc1
+for ANSI or 256 colours.
+The
+.Em Setulc
+argument is (red * 65536) + (green * 256) + blue where each is between 0
 and 255.
 .It Em \&Ss , Se
 Set or reset the cursor style.
